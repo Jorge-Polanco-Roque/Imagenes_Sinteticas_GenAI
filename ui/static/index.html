@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sala de Inspección · Datos sintéticos de defectos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<!-- Riel de navegación -->
+<nav class="rail">
+  <div class="mark" title="Sala de Inspección">
+    <span class="mark-glyph">◈</span>
+  </div>
+  <button class="nav-item active" data-view="panel"><span class="ico">▤</span><span>Panel</span></button>
+  <button class="nav-item" data-view="galeria"><span class="ico">▦</span><span>Galería</span></button>
+  <button class="nav-item" data-view="generar"><span class="ico">✦</span><span>Generar</span></button>
+  <button class="nav-item" data-view="entrenar"><span class="ico">◇</span><span>Entrenar</span></button>
+  <button class="nav-item" data-view="datos"><span class="ico">▥</span><span>Datos</span></button>
+  <div class="rail-foot">M5·MPS</div>
+</nav>
+
+<main class="stage">
+  <!-- Barra de telemetría -->
+  <header class="telemetry" id="telemetry">
+    <div class="tele-title">
+      <h1>Sala de Inspección</h1>
+      <p>Datos sintéticos de defectos · rollos de aluminio</p>
+    </div>
+    <div class="tele-readouts" id="readouts">
+      <div class="readout"><span class="lbl">ComfyUI</span><span class="val" id="r-comfy"><i class="dot"></i>—</span></div>
+      <div class="readout"><span class="lbl">Dispositivo</span><span class="val mono" id="r-device">—</span></div>
+      <div class="readout"><span class="lbl">LoRAs</span><span class="val mono" id="r-loras">—</span></div>
+      <div class="readout"><span class="lbl">Semilla</span><span class="val mono" id="r-crops">—</span></div>
+      <div class="readout"><span class="lbl">Generadas</span><span class="val mono" id="r-gen">—</span></div>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- PANEL -->
+    <section class="view" id="view-panel">
+      <div class="grid-cards" id="panel-cards"></div>
+      <div class="panel-flow" id="panel-flow"></div>
+    </section>
+
+    <!-- GALERÍA -->
+    <section class="view hidden" id="view-galeria">
+      <div class="view-head">
+        <div>
+          <span class="eyebrow">Inspección</span>
+          <h2>Imágenes generadas</h2>
+        </div>
+        <div class="head-tools">
+          <label class="toggle"><input type="checkbox" id="tg-overlay" checked><span>Marcar defecto</span></label>
+          <button class="btn ghost" id="btn-refresh-gal">Recargar</button>
+        </div>
+      </div>
+      <div class="inspection-grid" id="gal-grid"></div>
+      <div class="empty hidden" id="gal-empty"></div>
+    </section>
+
+    <!-- GENERAR -->
+    <section class="view hidden" id="view-generar">
+      <div class="view-head"><div><span class="eyebrow">Operación</span><h2>Generar imágenes</h2></div></div>
+      <div class="split">
+        <form class="console" id="form-generar">
+          <div class="field">
+            <label>Modo</label>
+            <div class="segmented" id="seg-mode">
+              <button type="button" class="seg active" data-v="inpaint">Inpaint sobre rollo</button>
+              <button type="button" class="seg" data-v="txt2img">Rollo completo</button>
+            </div>
+            <p class="hint" id="mode-hint">Pinta defectos dentro de una máscara sobre fotos de rollos limpios. La máscara se exporta como etiqueta.</p>
+          </div>
+          <div class="row">
+            <div class="field"><label>Cantidad</label><input type="number" id="g-n" value="4" min="1" max="200"></div>
+            <div class="field"><label>Intensidad (denoise)</label><input type="number" id="g-denoise" value="0.85" step="0.05" min="0.3" max="1"></div>
+          </div>
+          <div class="field"><label>LoRA</label><select id="g-lora"></select></div>
+          <div class="field" id="g-clean-wrap"><label>Carpeta de rollos limpios</label><input type="text" id="g-clean" value="_test_limpios"></div>
+          <div class="field"><label>Guardar en</label><input type="text" id="g-out" value="_test_salida"></div>
+          <button type="submit" class="btn primary big">Ejecutar generación</button>
+        </form>
+        <div class="console-side">
+          <div class="side-note">
+            <h4>Qué produce</h4>
+            <p>Cada corrida guarda la imagen, la máscara del defecto y su etiqueta <span class="mono">YOLO</span> emparejadas — listas para entrenar un detector.</p>
+            <p class="dim">Validá siempre contra un holdout 100% real.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENTRENAR -->
+    <section class="view hidden" id="view-entrenar">
+      <div class="view-head"><div><span class="eyebrow">Modelo</span><h2>Entrenar LoRA de defectos</h2></div></div>
+      <div class="split">
+        <form class="console" id="form-entrenar">
+          <div class="row">
+            <div class="field"><label>Pasos</label><input type="number" id="t-steps" value="220" min="50" max="2000" step="10"></div>
+            <div class="field"><label>Dimensión (rank)</label><input type="number" id="t-dim" value="16" min="4" max="64" step="4"></div>
+          </div>
+          <div class="field"><label>Nombre de salida</label><input type="text" id="t-name" value="rollo_defectos_lora"></div>
+          <p class="hint">Local en M5/MPS ≈ 11 s/paso (fp32). 220 pasos ≈ 40 min · 800 pasos ≈ 2.5 h.
+             Requiere <span class="mono">lora_train/</span> preparado en la pestaña Datos.</p>
+          <div class="btn-row">
+            <button type="submit" class="btn primary big">Iniciar entrenamiento</button>
+            <button type="button" class="btn ghost" id="btn-deploy">Publicar LoRA en ComfyUI</button>
+          </div>
+        </form>
+        <div class="console-side">
+          <div class="side-note flaw">
+            <h4>Media precisión no disponible en MPS</h4>
+            <p>Apple GPU entrena en fp32. Para un LoRA de mayor calidad y velocidad, el notebook de Colab (T4) tarda ~20–40 min.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DATOS -->
+    <section class="view hidden" id="view-datos">
+      <div class="view-head"><div><span class="eyebrow">Materia prima</span><h2>Datos semilla</h2></div></div>
+      <div class="split">
+        <div class="console">
+          <div class="side-note">
+            <h4>1 · Traer defectos públicos</h4>
+            <p>Descarga y recorta el dataset NEU-DET a tu taxonomía (acero — sirve para aprender la apariencia del defecto).</p>
+            <button class="btn primary" id="btn-dataset">Descargar y recortar NEU-DET</button>
+          </div>
+          <div class="side-note">
+            <h4>2 · Preparar para entrenar</h4>
+            <p>Arma <span class="mono">lora_train/</span> con captions. Límite por clase para pruebas rápidas.</p>
+            <div class="row">
+              <div class="field"><label>Máx. por clase (0 = todas)</label><input type="number" id="d-limit" value="40" min="0"></div>
+            </div>
+            <button class="btn primary" id="btn-prepare">Preparar dataset</button>
+          </div>
+        </div>
+        <div class="console-side">
+          <div class="crops-head">
+            <h4>Recortes semilla</h4>
+            <div class="chips" id="crops-chips"></div>
+          </div>
+          <div class="crops-strip" id="crops-strip"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Cajón de procesos -->
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-title"><span class="pulse" id="drawer-pulse"></span><span id="drawer-name">Proceso</span></div>
+    <div class="drawer-actions">
+      <span class="mono dim" id="drawer-status">—</span>
+      <button class="btn ghost xs" id="btn-stop">Detener</button>
+      <button class="btn ghost xs" id="btn-close-drawer">✕</button>
+    </div>
+  </div>
+  <pre class="drawer-log" id="drawer-log"></pre>
+</aside>
+
+<!-- Visor -->
+<div class="viewer hidden" id="viewer"><div class="viewer-inner"><img id="viewer-img"><button class="viewer-close" id="viewer-close">✕</button></div></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

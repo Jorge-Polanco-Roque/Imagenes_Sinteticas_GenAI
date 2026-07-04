@@ -1,0 +1,36 @@
+# Modelos y pesos (pesados — nunca al repo)
+*.safetensors
+*.ckpt
+*.pth
+*.patch
+*.bin
+
+# Datos y salidas
+dataset_sintetico/
+limpios/
+defectos_reales/
+lora_train/
+output/
+salidas/
+.cache_neu_det/
+_test_salida/
+_test_limpios/
+
+# Runtime local (ComfyUI + venv + modelos) — pesado, no versionar
+runtime/
+*.png
+*.jpg
+*.jpeg
+*.webp
+!workflows/**          # (los workflows son JSON, no imágenes)
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Sistema
+.DS_Store
+.ipynb_checkpoints/

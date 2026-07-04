@@ -1,0 +1,5 @@
+# Dependencias para los scripts LOCALES (prep de dataset y generación por lotes).
+# ComfyUI y kohya traen sus propias deps dentro de Colab (ver notebooks/).
+pillow>=10.0
+numpy>=1.24
+requests>=2.31

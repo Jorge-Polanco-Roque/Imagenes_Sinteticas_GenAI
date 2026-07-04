@@ -1,0 +1,6 @@
+# Dependencias del panel web (Sala de Inspección).
+# Se instalan en runtime/venv (el mismo de ComfyUI local).
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9
+requests>=2.31
